@@ -10,7 +10,7 @@ while programstatus:
         print("****      4--关闭虚拟机      ****")
         print("****      5--查看虚拟机列表  ****")
         print("****      6--修改虚拟机配置  ****")
-        print("****      ?--创建虚拟机快照  ****")
+        print("****      7--创建虚拟机快照  ****")
         print("****      8--删除虚拟机快照  ****")
         print("****      0--退出           ****")
         print("********************************")
@@ -47,6 +47,19 @@ while programstatus:
         os.mkdir(path)
         print("正在移动镜像文件，速度取决于当前硬盘性能。。。")
         shutil.copy(vmpath,path)
+    def setvmconfig(vmname,vmoperate,vmcfg):
+        if vmoperate == 1:
+            (setvmstatus,setvm) = subprocess.getstatusoutput("powershell Set-VM -Name %s -ProcessorCount %s"%(vmname,vmcfg))
+            if setvmstatus == 0:
+                print("更改虚拟机%s核心数量为%s成功！"%(vmname,vmcfg))
+            elif setvmstatus == 1:
+                print("更改虚拟机失败！可能是虚拟机不存在或者超出了所允许的最大值！")
+        elif vmoperate == 2:
+            (setvmstatus,setvm) = subprocess.getstatusoutput("powershell Set-VM -Name %s -DynamicMemory -MemoryMaximumBytes %s -Passthru | Start-VM"%(vmname,vmcfg))
+            if setvmstatus == 0:
+                print("更改虚拟机%s内存大小为%sMB成功！"%(vmname,vmcfg))
+            elif setvmstatus == 1:
+                print("更改虚拟机失败！可能是虚拟机不存在或者超出了所允许的最大值！")
     try:
         printMenu()
         operate = 0
@@ -74,4 +87,18 @@ while programstatus:
         if vmimg == 1:
             copyvmimage(vmname,"WinServer2012.vhdx")
             createvm(vmname,vmimg,vmmem,vmswitch)
-        
+    elif operate == 6:
+        confirmstatus = input("该操作需要虚拟机关机状态下执行，请确认是否已经关机(确认扣1不确认扣2)")
+        if confirmstatus == "1":
+            getvm()
+            print("1=cpu核心数量 2=内存大小")
+            vmname = input("请输入你想修改的虚拟机名字:")
+            vmoperate = int(input("请输入你想更改的虚拟机参数（请输入一个数字）:"))
+            if vmoperate == 1:
+                vmcfg = int(input("请输入更改后的cpu核心数量"))
+                setvmconfig(vmname,vmoperate,vmcfg)
+            if vmoperate == 2:
+                vmcfg = int(input("请输入更改后的内存大小(单位:MB):"))
+                setvmconfig(vmname,vmoperate,vmcfg)
+        else:
+            pass
